@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; background-color: #000}
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0 auto; padding: 0;}
+      #messages li {
+        color: #FF0000;
+        font-size: 11vw;
+        border-bottom: solid thin #333;
+        padding: 5px 33vw;
+        text-align: right;
+        font-weight: bold;
+      }
+      #messages li span { padding: 5px 10px; color: #FF0000; font-size: 3vw; display: block }
+      @keyframes blink {
+        50% {
+          opacity: 0.3;
+        }
+      }
+      @-webkit-keyframes blink {
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .blink {
+        animation: blink 1s ease-in-out 0s infinite;
+        -webkit-animation: blink 1s ease-in-out 0s infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <div id="sound"></div>
+    <script src="/socket-io-client.js"></script>
+    <script>
+      var socket = io();
+      socket.on('connect', function () {
+        console.log('board connceted')
+
+        function playSound(filename){
+          document.getElementById("sound").innerHTML='<audio autoplay="autoplay"><source src="' + filename + '" type="audio/mpeg" /><embed hidden="true" autostart="true" loop="false" src="' + filename +'" /></audio>';
+        }
+
+        function createListItem (data) {
+          const li = document.createElement('li')
+          li.setAttribute('id', data.number)
+          li.appendChild(document.createTextNode(`${data.number}`))
+          const span = document.createElement('span')
+          span.setAttribute('id', `${data.number}-status`)
+          span.appendChild(document.createTextNode(data.status))
+          li.appendChild(span)
+          return li
+        }
+
+        function appendNumber (data) {
+          const container = document.getElementById('messages')
+          const existing = document.getElementById(data.number)
+          if (!existing) {
+            const li = createListItem(data)
+            container.appendChild(li)
+          }
+        }
+
+        function moveNumberToStart (data) {
+          const container = document.getElementById('messages')
+          const li = document.getElementById(data.number)
+          const span = document.getElementById(`${data.number}-status`)
+          ringListItem(li)
+          span.innerText = data.status
+          container.insertBefore(li, container.children[0])
+        }
+
+        function ringListItem (li) {
+          const container = document.getElementById('messages')
+          playSound('/ding')
+          container.insertBefore(li, container.children[0])
+          li.classList.add('blink')
+          setTimeout(function () {
+            li.classList.remove('blink')
+          }, 2000)
+        }
+
+        function removeNumber (data) {
+          const container = document.getElementById('messages')
+          const li = document.getElementById(data.number)
+          container.removeChild(li)
+        }
+
+        socket.emit('sync_board_request')
+
+        socket.on('sync_board_response', function (data) {
+          console.log('sync response', data)
+          const container = document.getElementById('messages')
+          container.innerHTML = ''
+          data.forEach((item) => appendNumber(item))
+        })
+
+        socket.on('number_added', function (data) {
+          console.log('number added', data)
+          appendNumber(data)
+        })
+
+        socket.on('number_updated', function (data) {
+          console.log('number updated', data)
+          moveNumberToStart(data)
+        })
+
+        socket.on('number_removed', function (data) {
+          console.log('number removed', data)
+          removeNumber(data)
+        })
+
+        socket.on('number_ringed', function (data) {
+          console.log('number ringed', data)
+          const li = document.getElementById(data.number)
+          ringListItem(li)
+        })
+      })
+    </script>
+  </body>
+</html>
