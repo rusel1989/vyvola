@@ -3,6 +3,8 @@
 body {
   position: relative;
   height: 100vh;
+  padding: 0;
+  margin: 0;
   background-color: #232C39;
   background-image: linear-gradient(45deg, rgba(0, 216, 255, .5) 10%, rgba(0, 1, 127, .7));
   font-family: Arial, Helvetica, Helvetica Neue, serif;
@@ -58,7 +60,7 @@ a:hover {
 
 #keyboard {
 margin: 0;
-padding: 0;
+padding: 5px;
 list-style: none;
 }
     #keyboard li {
@@ -78,6 +80,7 @@ list-style: none;
       width: 230px;
       height: 60px;
       padding: 10px;
+      margin: 5px;
       margin-bottom: 5px;
       border-radius: 5px;
       border: 0;
@@ -88,13 +91,16 @@ list-style: none;
 
     #queue {
       margin: 0;
-      padding: 0;
+      padding: 5px 0;
       width: 245px;
+      height: 100vh;
+      overflow-y: auto;
     }
 
     .queue-item {
       height: 60px;
       padding: 10px;
+      margin-right: 5px;
       margin-bottom: 5px;
       border-radius: 5px;
       background: #fff;
@@ -103,6 +109,10 @@ list-style: none;
 
     .pull-left {
       float: left;
+    }
+
+        .pull-right {
+      float: right;
     }
         .capslock, .tab, .left-shift, .clearl, .switch {
         clear: left;

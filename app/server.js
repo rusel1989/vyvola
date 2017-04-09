@@ -3,15 +3,12 @@ var express = require('express')();
 var http = require('http').Server(express);
 var io = require('socket.io')(http);
 var fs = require('fs')
+var db = require('./storage')
 
 var electronAppPath = process.env.NODE_ENV === 'production' ? require('electron').app.getAppPath() + '/dist/' : __dirname
 
 io.on('connection', function(socket){
   console.log('a user connected');
-  socket.on('add_number', (number) => {
-    socket.broadcast.emit('number_added', number)
-  })
-
   socket.on('sync_board_request', () => {
     console.log('sync board req')
     socket.broadcast.emit('sync_board_request')
@@ -19,19 +16,46 @@ io.on('connection', function(socket){
 
   socket.on('sync_board_response', (data) => {
     console.log('sync board res')
-    socket.broadcast.emit('sync_board_response', data)
+    db.find({}, (err, docs) => {
+      if (err) {
+        console.log('find err', err)
+        socket.broadcast.emit('sync_board_response', data)
+        return
+      }
+      socket.broadcast.emit('sync_board_response', docs)
+    })
   })
 
-  socket.on('update_number', (number) => {
-    socket.broadcast.emit('number_updated', number)
+  socket.on('add_number', (item) => {
+    db.insert(item, (err) => {
+      if (err) {
+        console.log('insert err', err)
+      }
+      socket.broadcast.emit('number_added', item)
+    })
   })
 
-  socket.on('ring_number', (number) => {
-    socket.broadcast.emit('number_ringed', number)
+
+  socket.on('update_number', (item) => {
+    db.update({ number: item.number }, item, {}, (err) => {
+      if (err) {
+        console.log('update err', err)
+      }
+      socket.broadcast.emit('number_updated', item)
+    })
   })
 
-  socket.on('remove_number', (number) => {
-    socket.broadcast.emit('number_removed', number)
+  socket.on('remove_number', (item) => {
+    db.remove({ number: item.number }, {}, (err) => {
+      if (err) {
+        console.log('remove err', err)
+      }
+      socket.broadcast.emit('number_removed', item)
+    })
+  })
+
+  socket.on('ring_number', (item) => {
+    socket.broadcast.emit('number_ringed', item)
   })
 })
 

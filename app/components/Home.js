@@ -3,6 +3,7 @@ import React, { Component } from 'react'
 import { Link } from 'react-router'
 import styles from './Home.css'
 import io from 'socket.io-client'
+import db from '../storage'
 
 export default class Home extends Component {
   constructor () {
@@ -39,14 +40,13 @@ export default class Home extends Component {
       }
       const data = { number: this.state.number, status: 'Vyřizuje se', createdAt: new Date(), progress: 0 }
       this.socket.emit('add_number', data)
-      this.setState({ queue: [ ...this.state.queue, data ], number: '' })
+      this.setState({ queue: [ data, ...this.state.queue ], number: '' })
     }
   }
 
   findNumber (number) {
     return this.state.queue.find((item) => item.number == number)
   }
-
 
   finishNumber (number) {
     const item = this.findNumber(number)
@@ -75,6 +75,17 @@ export default class Home extends Component {
     }
   }
 
+  componentDidMount () {
+    console.log('did mount')
+    db.find({}, (err, docs) => {
+      if (err) {
+        console.log('load docs err', err)
+      }
+      console.log('have docs', docs.length)
+      this.setState({ queue: docs })
+    })
+  }
+
   render() {
     return (
       <div id="container">
@@ -96,7 +107,7 @@ export default class Home extends Component {
             <li className="return" onClick={() => this.addNumber()}>ODESLAT</li>
           </ul>
         </div>
-        <div className="pull-left">
+        <div className="pull-right">
           <ul id='queue'>
             {this.state.queue.map((item, i) => {
               return (
