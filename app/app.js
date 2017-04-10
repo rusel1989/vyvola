@@ -1,7 +1,8 @@
 // @flow
 import React, { Component } from 'react'
-import io from 'socket.io-client'
+
 import db from './storage'
+import io from 'socket.io-client'
 
 export default class Home extends Component {
   constructor () {
@@ -73,14 +74,28 @@ export default class Home extends Component {
     }
   }
 
+  setShowStatus (val) {
+    this.setState({ showStatus: val })
+    console.log('show status', val)
+    this.socket.emit('set_show_status', { showStatus: val })
+  }
+
   componentDidMount () {
     console.log('did mount')
     db.find({}, (err, docs) => {
       if (err) {
         console.log('load docs err', err)
       }
-      console.log('have docs', docs.length)
-      this.setState({ queue: docs })
+      const settings = docs.find((doc) => doc.key === 'settings')
+      const finalDocs = docs.filter((doc) => doc.key != 'settings')
+
+      console.log('settings', settings, docs)
+      console.log('have docs', finalDocs.length)
+
+      if (settings) {
+        this.setShowStatus(settings.showStatus)
+      }
+      this.setState({ queue: finalDocs })
     })
   }
 
@@ -104,6 +119,20 @@ export default class Home extends Component {
             <li className="letter clearl" onClick={() => this.setState({ number: this.state.number + '0'})}>0</li>
             <li className="return" onClick={() => this.addNumber()}>ODESLAT</li>
           </ul>
+          <div className="clearl"></div>
+          <div className="show-status-container">
+            <input
+              id="show-status"
+              type="checkbox"
+              style={{ display: 'inline-block' }}
+              checked={this.state.showStatus}
+              onChange={(e) => this.setShowStatus(e.target.checked)}/>
+            <label
+              style={{ display: 'inline-block' }}
+              htmlFor="show-status">
+              Zobrazovat stav
+            </label>
+          </div>
         </div>
         <div className="pull-right">
           <ul id='queue'>

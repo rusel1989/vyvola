@@ -16,7 +16,7 @@ io.on('connection', function(socket){
 
   socket.on('sync_board_response', (data) => {
     console.log('sync board res')
-    db.find({}, (err, docs) => {
+    db.find({ key: {$ne: 'settings' }}, (err, docs) => {
       if (err) {
         console.log('find err', err)
         socket.broadcast.emit('sync_board_response', data)
@@ -24,6 +24,16 @@ io.on('connection', function(socket){
       }
       socket.broadcast.emit('sync_board_response', docs)
     })
+  })
+
+  socket.on('set_show_status', (data) => {
+    console.log('set show status', data)
+    data.key = 'settings'
+    db.update({ key: 'settings' }, data, { upsert: true }, (err) => {
+      if (err) {
+        console.log('update settigns err', err)
+      }
+      socket.broadcast.emit('set_show_status', data)    })
   })
 
   socket.on('add_number', (item) => {

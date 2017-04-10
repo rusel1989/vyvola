@@ -11,13 +11,19 @@
       #messages { list-style-type: none; margin: 0 auto; padding: 0;}
       #messages li {
         color: #FF0000;
-        font-size: 11vw;
+        font-size: 20vh;
         border-bottom: solid thin #333;
+        height: 33vh;
         padding: 5px 33vw;
         text-align: right;
         font-weight: bold;
       }
-      #messages li span { padding: 5px 10px; color: #FF0000; font-size: 3vw; display: block }
+      #messages li.no-status {
+        font-size: 31vh;
+        line-height: 31vh;
+        text-align: center;
+      }
+      #messages li span { padding: 5px 10px; color: #FF0000; font-size: 5vh; display: block }
       @keyframes blink {
         50% {
           opacity: 0.3;
@@ -43,18 +49,42 @@
       socket.on('connect', function () {
         console.log('board connceted')
 
+        var settings = {
+          showStatus: false
+        }
+
         function playSound(filename){
           document.getElementById("sound").innerHTML='<audio autoplay="autoplay"><source src="' + filename + '" type="audio/mpeg" /><embed hidden="true" autostart="true" loop="false" src="' + filename +'" /></audio>';
+        }
+
+        function hide (node) {
+          node.style.display = 'none'
+        }
+
+        function show (node, display) {
+          node.style.display = null
+        }
+
+        function appendStatus (data, node) {
+            const span = document.createElement('span')
+            settings.showStatus ? show(span) : hide(span)
+            span.setAttribute('class', 'status-text')
+            span.setAttribute('id', `${data.number}-status`)
+            span.appendChild(document.createTextNode(data.status))
+            node.appendChild(span)
         }
 
         function createListItem (data) {
           const li = document.createElement('li')
           li.setAttribute('id', data.number)
+          li.setAttribute('class', 'number-item')
+          if (settings.showStatus) {
+            li.classList.remove('no-status')
+          } else {
+            li.classList.add('no-status')
+          }
           li.appendChild(document.createTextNode(`${data.number}`))
-          const span = document.createElement('span')
-          span.setAttribute('id', `${data.number}-status`)
-          span.appendChild(document.createTextNode(data.status))
-          li.appendChild(span)
+          appendStatus(data, li)
           return li
         }
 
@@ -99,6 +129,36 @@
           const container = document.getElementById('messages')
           container.innerHTML = ''
           data.forEach((item) => appendNumber(item))
+        })
+
+        socket.on('set_show_status', function (data) {
+          console.log('set show status', data)
+          var listItems = document.getElementsByClassName('number-item')
+          var nodes = document.getElementsByClassName('status-text')
+
+          if (!nodes) {
+            console.log('no nodes')
+            return
+          }
+
+          if (data.showStatus) {
+            settings.showStatus = true
+          } else {
+            settings.showStatus = false
+          }
+
+          for (var i = 0; i < nodes.length; i += 1) {
+            var node = nodes[i]
+            var listItem = listItems[i]
+            console.log('node', node)
+            if (data.showStatus) {
+              listItem.classList.remove('no-status')
+              show(node)
+            } else {
+              listItem.classList.add('no-status')
+              hide(node)
+            }
+          }
         })
 
         socket.on('number_added', function (data) {
