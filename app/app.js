@@ -1,9 +1,7 @@
 // @flow
 import React, { Component } from 'react'
-import { Link } from 'react-router'
-import styles from './Home.css'
 import io from 'socket.io-client'
-import db from '../storage'
+import db from './storage'
 
 export default class Home extends Component {
   constructor () {

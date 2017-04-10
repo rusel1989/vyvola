@@ -1,6 +1,5 @@
 // @flow
 import { app, BrowserWindow } from 'electron';
-import MenuBuilder from './menu';
 const expressApp = require('./server')
 
 
@@ -86,7 +85,4 @@ app.on('ready', async () => {
     mainWindow = null;
     expressApp.stopServer()
   });
-
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
 });
