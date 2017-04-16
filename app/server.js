@@ -45,7 +45,6 @@ io.on('connection', function(socket){
     })
   })
 
-
   socket.on('update_number', (item) => {
     db.update({ number: item.number }, item, {}, (err) => {
       if (err) {

@@ -93,6 +93,9 @@
           const existing = document.getElementById(data.number)
           if (!existing) {
             const li = createListItem(data)
+            if (!settings.showStatus && data.status !== 'Připraveno') {
+              hide(li)
+            }
             container.insertBefore(li, container.children[0])
           }
         }
@@ -102,6 +105,9 @@
           const li = document.getElementById(data.number)
           const span = document.getElementById(`${data.number}-status`)
           ringListItem(li)
+          if (!settings.showStatus) {
+            show(li)
+          }
           span.innerText = data.status
           container.insertBefore(li, container.children[0])
         }
@@ -111,6 +117,9 @@
           playSound('/ding')
           container.insertBefore(li, container.children[0])
           li.classList.add('blink')
+          if (!settings.showStatus) {
+            show(li)
+          }
           setTimeout(function () {
             li.classList.remove('blink')
           }, 2000)
